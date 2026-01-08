@@ -6,10 +6,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, password } = body;
 
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const adminPassword = process.env.ADMIN_PASSWORD;
+    const admins = [
+      { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD },
+      { email: process.env.ADMIN_EMAIL_2, password: process.env.ADMIN_PASSWORD_2 }
+    ];
 
-    if (email === adminEmail && password === adminPassword) {
+    const isValid = admins.some(admin => admin.email === email && admin.password === password);
+
+    if (isValid) {
       const cookieStore = await cookies();
       
       // Set the HTTP-only auth cookie

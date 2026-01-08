@@ -1,0 +1,31 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Node {
+  id            String  @id @default(cuid())
+  type          String  // 'branch' or 'member'
+  title         String? // Only for branches
+  
+  // Member Details (Only for members)
+  name          String?
+  bio           String?
+  role          String?
+  imageUrl      String? // Consider storing Base64 or URL depending on size, but URL/Storage service is better for prod.
+
+  parentId      String?
+  parent        Node?   @relation("TreeHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children      Node[]  @relation("TreeHierarchy")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

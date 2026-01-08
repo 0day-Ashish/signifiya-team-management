@@ -473,6 +473,43 @@ export default function Home() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Drag Scroll State
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [startY, setStartY] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    // Only drag if clicking on the background (not buttons/inputs)
+    // We can check if the target is one of the container divs or svg background
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setStartY(e.pageY - scrollRef.current.offsetTop);
+    setScrollLeft(scrollRef.current.scrollLeft);
+    setScrollTop(scrollRef.current.scrollTop);
+  };
+
+  const onMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const onMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const y = e.pageY - scrollRef.current.offsetTop;
+    const walkX = (x - startX) * 1; // Scroll speed
+    const walkY = (y - startY) * 1;
+    scrollRef.current.scrollLeft = scrollLeft - walkX;
+    scrollRef.current.scrollTop = scrollTop - walkY;
+  };
+
   const toggleNode = useCallback((id: string, isOpen: boolean) => {
     setExpandedNodes(prev => ({ ...prev, [id]: isOpen }));
   }, []);
@@ -809,7 +846,14 @@ export default function Home() {
     <main className="relative h-screen w-full overflow-hidden bg-zinc-950">
       <div className="fixed inset-0 bg-[url('/background-pg.jpg')] bg-cover bg-center bg-no-repeat pointer-events-none" />
 
-      <div ref={scrollRef} className="absolute inset-0 overflow-auto flex cursor-grab active:cursor-grabbing">
+      <div 
+        ref={scrollRef} 
+        className="absolute inset-0 overflow-auto flex cursor-grab active:cursor-grabbing"
+        onMouseDown={onMouseDown}
+        onMouseLeave={onMouseLeave}
+        onMouseUp={onMouseUp}
+        onMouseMove={onMouseMove}
+      >
         <div className="min-w-fit w-fit m-auto min-h-full p-[2500px] relative flex flex-col items-center">
             
             {/* Scrollable Header - Centered Layout */}

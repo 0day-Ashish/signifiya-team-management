@@ -124,6 +124,15 @@ const MindMapNode = ({
   const defaultOpen = (node.children && node.children.length > 0 && !isBranch) || false;
   const isOpen = expandedNodes[node.id] !== undefined ? expandedNodes[node.id] : defaultOpen;
 
+  // Logic to toggle arrow visibility
+  // If editing/admin is available, we show arrow even if empty because we might add children.
+  // Actually the requirement is "remove dropdown arrow function if the node is empty in view mode only"
+  // "View mode" = !isAdmin. Or simply "not currently editing".
+  // If !isAdmin and no children, hide arrow.
+  const hasMinChildren = (node.children && node.children.length > 0);
+  // Admin always sees arrow if it's a branch because admin can add items (which are children)
+  const showArrow = hasMinChildren || (isBranch && isAdmin);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as HTMLElement)) {
@@ -328,8 +337,8 @@ const MindMapNode = ({
                   />
             ) : (
                 <div 
-                    onClick={() => onToggleNode(node.id, !isOpen)}
-                    className={`group/node relative flex items-center gap-3 px-8 py-3 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl transition-all duration-300 ${spaceMono.className} z-10 cursor-pointer`}
+                    onClick={showArrow ? () => onToggleNode(node.id, !isOpen) : undefined}
+                    className={`group/node relative flex items-center gap-3 px-8 py-3 bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl transition-all duration-300 ${spaceMono.className} z-10 ${showArrow ? 'cursor-pointer hover:bg-white/10' : ''}`}
                 >
                     <span className="text-xl tracking-wide text-white">{node.title}</span>
                     
@@ -359,11 +368,13 @@ const MindMapNode = ({
                     </div>
                     )}
 
+                    {showArrow && (
                     <div className={`transform transition-transform text-white duration-300 ${isOpen ? 'rotate-180' : ''}`}>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                     </svg>
                     </div>
+                    )}
                 </div>
             )}
        </div>

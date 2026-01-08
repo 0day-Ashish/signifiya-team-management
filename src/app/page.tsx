@@ -99,6 +99,8 @@ const MindMapNode = ({
   onEditBranch,
   onEditMember,
   onDeleteNode,
+  expandedNodes,
+  onToggleNode,
   depth = 0,
   isAdmin = false 
 }: { 
@@ -108,13 +110,19 @@ const MindMapNode = ({
   onEditBranch: (nodeId: string, newTitle: string) => void;
   onEditMember: (nodeId: string, details: { name: string; role: string; bio: string }) => void;
   onDeleteNode: (nodeId: string) => void;
+  expandedNodes: Record<string, boolean>;
+  onToggleNode: (id: string, isOpen: boolean) => void;
   depth?: number;
   isAdmin?: boolean;
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const isBranch = node.type === 'branch';
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Derived isOpen state from parent props
+  // Members with children default to open, branches default to closed
+  const defaultOpen = (node.children && node.children.length > 0 && !isBranch) || false;
+  const isOpen = expandedNodes[node.id] !== undefined ? expandedNodes[node.id] : defaultOpen;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -126,13 +134,6 @@ const MindMapNode = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // Update isOpen when children are added to ensure they are visible
-  useEffect(() => {
-    if (node.children && node.children.length > 0 && !isBranch) {
-        setIsOpen(true);
-    }
-  }, [node.children?.length, isBranch]);
 
   const childrenCount = (node.children?.length || 0) + (isBranch ? 1 : 0); // +1 for Action Node only if Branch
   const [isEditing, setIsEditing] = useState(false);
@@ -259,7 +260,7 @@ const MindMapNode = ({
                                             e.stopPropagation(); 
                                             onAddBranch(node.id); 
                                             setShowDropdown(false);
-                                            setIsOpen(true);
+                                            onToggleNode(node.id, true);
                                         }}
                                         className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/10 flex items-center gap-2 transition-colors"
                                     >
@@ -327,7 +328,7 @@ const MindMapNode = ({
                   />
             ) : (
                 <div 
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={() => onToggleNode(node.id, !isOpen)}
                     className={`group/node relative flex items-center gap-3 px-8 py-3 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl transition-all duration-300 ${spaceMono.className} z-10 cursor-pointer`}
                 >
                     <span className="text-xl tracking-wide text-white">{node.title}</span>
@@ -388,6 +389,8 @@ const MindMapNode = ({
                       onEditBranch={onEditBranch}
                       onEditMember={onEditMember}
                       onDeleteNode={onDeleteNode}
+                      expandedNodes={expandedNodes}
+                      onToggleNode={onToggleNode}
                       depth={depth + 1}
                       isAdmin={isAdmin}
                     />
@@ -452,6 +455,11 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   
   const [treeData, setTreeData] = useState<Node | null>(null);
+  const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
+
+  const toggleNode = useCallback((id: string, isOpen: boolean) => {
+    setExpandedNodes(prev => ({ ...prev, [id]: isOpen }));
+  }, []);
 
   // Check auth status on mount
   useEffect(() => {
@@ -699,7 +707,7 @@ export default function Home() {
         console.error("Failed to edit member", err);
     }
   };
-  if (isLoading) {
+  if (isLoading && !treeData) {
       return (
         <main className="relative h-screen w-full overflow-hidden bg-zinc-950">
           <div className="fixed inset-0 bg-[url('/background-pg.jpg')] bg-cover bg-center bg-no-repeat pointer-events-none" />
@@ -741,6 +749,8 @@ export default function Home() {
                     onAddBranch={handleAddBranch}
                     onAddMember={openMemberModal}
                     onEditBranch={handleEditBranch}                    onEditMember={handleEditMember}                    onDeleteNode={handleDeleteNode}
+                    expandedNodes={expandedNodes}
+                    onToggleNode={toggleNode}
                     isAdmin={isAdmin}
                     />
                 )}

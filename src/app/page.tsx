@@ -97,6 +97,7 @@ const MindMapNode = ({
   onAddBranch, 
   onAddMember,
   onEditBranch,
+  onEditMember,
   onDeleteNode,
   depth = 0,
   isAdmin = false 
@@ -105,6 +106,7 @@ const MindMapNode = ({
   onAddBranch: (parentId: string) => void;
   onAddMember: (parentId: string) => void;
   onEditBranch: (nodeId: string, newTitle: string) => void;
+  onEditMember: (nodeId: string, details: { name: string; role: string; bio: string }) => void;
   onDeleteNode: (nodeId: string) => void;
   depth?: number;
   isAdmin?: boolean;
@@ -135,13 +137,20 @@ const MindMapNode = ({
   const childrenCount = (node.children?.length || 0) + (isBranch ? 1 : 0); // +1 for Action Node only if Branch
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(node.title || '');
+  const [editedMember, setEditedMember] = useState({
+    name: node.memberDetails?.name || '',
+    role: node.memberDetails?.role || '',
+    bio: node.memberDetails?.bio || ''
+  });
   const inputRef = useRef<HTMLInputElement>(null);
+  const memberInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (isEditing && inputRef.current) {
-        inputRef.current.focus();
+    if (isEditing) {
+        if (isBranch && inputRef.current) inputRef.current.focus();
+        if (!isBranch && memberInputRef.current) memberInputRef.current.focus();
     }
-  }, [isEditing]);
+  }, [isEditing, isBranch]);
 
   const handleSaveTitle = () => {
     if (editedTitle.trim()) {
@@ -150,10 +159,24 @@ const MindMapNode = ({
     }
   };
 
+  const handleSaveMember = () => {
+     onEditMember(node.id, editedMember);
+     setIsEditing(false);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSaveTitle();
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (isBranch) handleSaveTitle();
+        else handleSaveMember();
+    }
     if (e.key === 'Escape') {
         setEditedTitle(node.title || '');
+        setEditedMember({
+            name: node.memberDetails?.name || '',
+            role: node.memberDetails?.role || '',
+            bio: node.memberDetails?.bio || ''
+        });
         setIsEditing(false);
     }
   };
@@ -162,6 +185,40 @@ const MindMapNode = ({
     <div className="flex flex-col items-center relative group/node z-10">
        <div className="relative flex items-center gap-2 z-10">
             {!isBranch ? (
+               isEditing ? (
+                 <div className="relative animate-in fade-in zoom-in duration-300 z-50">
+                    <div className={`p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl w-64 shrink-0 space-y-3 ${spaceMono.className}`}>
+                        <input
+                            ref={memberInputRef}
+                            type="text"
+                            value={editedMember.name}
+                            onChange={(e) => setEditedMember({...editedMember, name: e.target.value})}
+                            placeholder="Name"
+                            className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-white/30"
+                            onKeyDown={handleKeyDown}
+                        />
+                        <input
+                            type="text"
+                            value={editedMember.role}
+                            onChange={(e) => setEditedMember({...editedMember, role: e.target.value})}
+                            placeholder="Role"
+                            className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white/80 text-xs focus:outline-none focus:border-white/30"
+                            onKeyDown={handleKeyDown}
+                        />
+                        <textarea
+                            value={editedMember.bio}
+                            onChange={(e) => setEditedMember({...editedMember, bio: e.target.value})}
+                            placeholder="Bio"
+                            className="w-full bg-white/5 border border-white/10 rounded px-2 py-1 text-white/60 text-xs focus:outline-none focus:border-white/30 resize-none h-20"
+                            onKeyDown={handleKeyDown}
+                        />
+                        <div className="flex gap-2 justify-end pt-2">
+                             <button onClick={() => setIsEditing(false)} className="text-xs text-white/50 hover:text-white">Cancel</button>
+                             <button onClick={handleSaveMember} className="text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded text-white border border-white/20">Save</button>
+                        </div>
+                    </div>
+                 </div>
+               ) : (
                <div className="relative animate-in fade-in zoom-in duration-300 group/member">
                     {/* Updated Menu Button for Member */}
                     {isAdmin && (
@@ -179,6 +236,24 @@ const MindMapNode = ({
                             {/* Dropdown Menu */}
                             {showDropdown && (
                                 <div className="absolute top-full right-0 mt-2 w-48 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 z-50">
+                                    <button 
+                                        onClick={(e) => { 
+                                            e.stopPropagation(); 
+                                            setEditedMember({
+                                                name: node.memberDetails?.name || '',
+                                                role: node.memberDetails?.role || '',
+                                                bio: node.memberDetails?.bio || ''
+                                            });
+                                            setIsEditing(true);
+                                            setShowDropdown(false);
+                                        }}
+                                        className="w-full px-4 py-3 text-left text-sm text-white hover:bg-white/10 flex items-center gap-2 transition-colors border-b border-white/10"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                        </svg>
+                                        Edit Member
+                                    </button>
                                     <button 
                                         onClick={(e) => { 
                                             e.stopPropagation(); 
@@ -238,6 +313,7 @@ const MindMapNode = ({
                         </p>
                     </div>
                 </div>
+              )
             ) : isEditing ? (
                  <input
                     ref={inputRef}
@@ -310,6 +386,7 @@ const MindMapNode = ({
                       onAddBranch={onAddBranch}
                       onAddMember={onAddMember}
                       onEditBranch={onEditBranch}
+                      onEditMember={onEditMember}
                       onDeleteNode={onDeleteNode}
                       depth={depth + 1}
                       isAdmin={isAdmin}
@@ -609,7 +686,19 @@ export default function Home() {
         console.error("Failed to edit node", err);
     }
   };
-
+  const handleEditMember = async (nodeId: string, details: { name: string, role: string, bio: string }) => {
+    try {
+        setIsLoading(true);
+        await fetch(`/api/nodes/${nodeId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(details)
+        });
+        fetchTree();
+    } catch(err) {
+        console.error("Failed to edit member", err);
+    }
+  };
   if (isLoading) {
       return (
         <main className="relative h-screen w-full overflow-hidden bg-zinc-950">
@@ -651,8 +740,7 @@ export default function Home() {
                     node={treeData} 
                     onAddBranch={handleAddBranch}
                     onAddMember={openMemberModal}
-                    onEditBranch={handleEditBranch}
-                    onDeleteNode={handleDeleteNode}
+                    onEditBranch={handleEditBranch}                    onEditMember={handleEditMember}                    onDeleteNode={handleDeleteNode}
                     isAdmin={isAdmin}
                     />
                 )}

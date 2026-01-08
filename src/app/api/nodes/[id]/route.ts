@@ -18,7 +18,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       where: { id },
       data: {
         title: body.title,
-        // Add other fields if editable later
+        name: body.name,
+        bio: body.bio,
+        role: body.role,
+        imageUrl: body.imageUrl,
       },
     });
     return NextResponse.json(updatedNode);
@@ -37,7 +40,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   try {
     const { id } = await params;
-    // onDelete: Cascade in schema should handle children
+
     await prisma.node.delete({
       where: { id },
     });

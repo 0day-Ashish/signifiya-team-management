@@ -144,7 +144,7 @@ const MindMapNode = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const childrenCount = (node.children?.length || 0) + (isBranch ? 1 : 0); // +1 for Action Node only if Branch
+  const childrenCount = (node.children?.length || 0) + (isBranch && isAdmin ? 1 : 0); // +1 for Action Node only if Branch and Admin
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(node.title || '');
   const [editedMember, setEditedMember] = useState({
@@ -192,7 +192,7 @@ const MindMapNode = ({
   };
 
   return (
-    <div className="flex flex-col items-center relative group/node z-10">
+    <div id={`node-${node.id}`} className="flex flex-col items-center relative group/node z-10">
        <div className="relative flex items-center gap-2 z-10">
             {!isBranch ? (
                isEditing ? (
@@ -390,7 +390,7 @@ const MindMapNode = ({
                   <TreeBranch 
                     key={child.id}
                     isFirst={index === 0}
-                    isLast={false} // Never last because Actions node is always added
+                    isLast={index === (node.children?.length || 0) - 1 && !(isBranch && isAdmin)}
                     isOnly={childrenCount === 1}
                   >
                     <MindMapNode 
@@ -467,10 +467,84 @@ export default function Home() {
   
   const [treeData, setTreeData] = useState<Node | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
+  
+  // Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const toggleNode = useCallback((id: string, isOpen: boolean) => {
     setExpandedNodes(prev => ({ ...prev, [id]: isOpen }));
   }, []);
+
+  // Search Logic
+  const handleSearchSelect = (nodeId: string) => {
+      // 1. Find path to node to expand parents
+      const findPath = (current: Node, targetId: string, path: string[] = []): string[] | null => {
+          if (current.id === targetId) return path;
+          if (current.children) {
+              for (const child of current.children) {
+                  const res = findPath(child, targetId, [...path, current.id]);
+                  if (res) return res;
+              }
+          }
+          return null;
+      };
+
+      if (!treeData) return;
+      const path = findPath(treeData, nodeId);
+      
+      // 2. Expand all parents
+      if (path) {
+          const newExpanded = { ...expandedNodes };
+          path.forEach(id => newExpanded[id] = true);
+          setExpandedNodes(newExpanded);
+      }
+
+      // 3. Close search and scroll
+      setIsSearchOpen(false);
+      setSearchQuery('');
+      
+      // Allow render to update expanded state before scrolling
+      setTimeout(() => {
+          const element = document.getElementById(`node-${nodeId}`);
+          if (element) {
+               element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+               // Highlight effect
+               const card = element.querySelector('.group\\/node > div'); 
+               // Note: We target the inner card div usually found inside the node wrapper
+               if (card) {
+                   card.classList.add('ring-4', 'ring-white/50');
+                   setTimeout(() => card.classList.remove('ring-4', 'ring-white/50'), 2000);
+               }
+          }
+      }, 300); // 300ms delay to ensure expansion animation starts/completes enough
+  };
+
+  const getSearchResults = () => {
+      if (!searchQuery.trim() || !treeData) return [];
+      
+      const results: Node[] = [];
+      const traverse = (node: Node) => {
+          const titleMatch = node.title?.toLowerCase().includes(searchQuery.toLowerCase());
+          const nameMatch = node.memberDetails?.name.toLowerCase().includes(searchQuery.toLowerCase());
+          if (titleMatch || nameMatch) {
+              results.push(node);
+          }
+          node.children?.forEach(traverse);
+      };
+      
+      traverse(treeData);
+      return results;
+  };
+
+  const searchResults = getSearchResults();
+
+  useEffect(() => {
+      if (isSearchOpen && searchInputRef.current) {
+          searchInputRef.current.focus();
+      }
+  }, [isSearchOpen]);
 
   // Check auth status on mount
   useEffect(() => {
@@ -769,6 +843,85 @@ export default function Home() {
         </div>
       </div>
       
+      {/* Search Trigger Button */}
+      <button 
+        onClick={() => setIsSearchOpen(true)}
+        className="absolute top-0 left-0 m-8 p-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-white transition-all z-20 group"
+        aria-label="Search"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 group-hover:scale-110 transition-transform">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        </svg>
+      </button>
+
+      {/* Search Modal */}
+      {isSearchOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-32 bg-black/40 backdrop-blur-sm p-4" onClick={() => setIsSearchOpen(false)}>
+          <div className="relative w-full max-w-xl bg-black/80 border border-white/20 backdrop-blur-md rounded-2xl shadow-2xl animate-in fade-in slide-in-from-top-4 duration-200 overflow-hidden" onClick={e => e.stopPropagation()}>
+             <div className="flex items-center p-4 border-b border-white/10 gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-white/50">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                <input 
+                    ref={searchInputRef}
+                    type="text" 
+                    placeholder="Search members or branches..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={`flex-1 bg-transparent text-white placeholder-white/40 focus:outline-none ${spaceMono.className}`}
+                />
+                <button 
+                    onClick={() => setIsSearchOpen(false)}
+                    className="text-white/40 hover:text-white"
+                >
+                    <span className="text-xs border border-white/20 rounded px-1.5 py-0.5">ESC</span>
+                </button>
+             </div>
+             
+             <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
+                {searchQuery && searchResults.length === 0 ? (
+                    <div className="p-8 text-center text-white/40 text-sm">No results found</div>
+                ) : (
+                    <div className="p-2">
+                        {searchResults.map((node) => (
+                            <button
+                                key={node.id}
+                                onClick={() => handleSearchSelect(node.id)}
+                                className="w-full text-left p-3 hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3 group"
+                            >
+                                {node.type === 'member' ? (
+                                    <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-300 border border-blue-500/30 shrink-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                            <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
+                                        </svg>
+                                    </div>
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-300 border border-purple-500/30 shrink-0">
+                                         <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+                                    </div>
+                                )}
+                                <div>
+                                    <h4 className="text-white font-medium text-sm">
+                                        {node.memberDetails?.name || node.title}
+                                    </h4>
+                                    <p className="text-white/40 text-xs">
+                                        {node.type === 'member' ? node.memberDetails?.role : 'Branch'}
+                                    </p>
+                                </div>
+                                <div className="ml-auto text-white/20 group-hover:text-white/60 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
+                                    </svg>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                )}
+             </div>
+          </div>
+        </div>
+      )}
+
       {/* Login Button - Only show if NOT logged in */}
       {!isAdmin && (
       <button 

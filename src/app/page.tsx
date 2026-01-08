@@ -20,6 +20,47 @@ interface Node {
   children?: Node[];
 }
 
+// Simple skeleton blocks used during loading
+const SkeletonBox = ({ width = 'w-64', height = 'h-20', rounded = 'rounded-2xl' }: { width?: string; height?: string; rounded?: string }) => (
+  <div className={`animate-pulse ${width} ${height} bg-white/10 backdrop-blur-md border border-white/20 ${rounded}`}></div>
+);
+
+const SkeletonMindMap = () => (
+  <div className="relative z-10 flex flex-col items-center">
+    {/* Header space mimic */}
+    <div className="text-white text-center mb-24">
+      <div className="flex items-baseline justify-center gap-2">
+        <SkeletonBox width="w-48" height="h-12" />
+        <SkeletonBox width="w-24" height="h-10" />
+      </div>
+      <div className="mt-6 flex justify-center">
+        <SkeletonBox width="w-40" height="h-6" rounded="rounded-xl" />
+      </div>
+    </div>
+
+    {/* Root node */}
+    <div className="flex flex-col items-center">
+      <SkeletonBox width="w-64" height="h-14" />
+      <div className="h-8 w-px bg-white/20 my-4"></div>
+      {/* Children placeholder */}
+      <div className="flex gap-8">
+        <div className="flex flex-col items-center">
+          <div className="h-8 w-px bg-white/20 mb-2"></div>
+          <SkeletonBox width="w-56" height="h-24" />
+        </div>
+        <div className="flex flex-col items-center">
+          <div className="h-8 w-px bg-white/20 mb-2"></div>
+          <SkeletonBox width="w-56" height="h-24" />
+        </div>
+        <div className="flex flex-col items-center">
+          <div className="h-8 w-px bg-white/20 mb-2"></div>
+          <SkeletonBox width="w-56" height="h-24" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const TreeBranch = ({ 
   children, 
   isFirst, 
@@ -380,6 +421,7 @@ export default function Home() {
 
   const fetchTree = useCallback(async () => {
     try {
+      setIsLoading(true);
         const res = await fetch('/api/nodes');
         if (!res.ok) {
             console.error("API response not ok:", res.status, res.statusText);
@@ -466,13 +508,20 @@ export default function Home() {
 
   useEffect(() => {
     fetchTree();
-    
-    // Scroll to center on mount
-    if (scrollRef.current) {
-        const { scrollWidth, clientWidth } = scrollRef.current;
-        scrollRef.current.scrollLeft = (scrollWidth - clientWidth) / 2;
-    }
   }, [fetchTree]);
+
+  // Scroll to center when data loads
+  useEffect(() => {
+    if (!isLoading && treeData && scrollRef.current) {
+        requestAnimationFrame(() => {
+            if (scrollRef.current) {
+                const { scrollWidth, clientWidth, scrollHeight, clientHeight } = scrollRef.current;
+                scrollRef.current.scrollLeft = (scrollWidth - clientWidth) / 2;
+                scrollRef.current.scrollTop = (scrollHeight - clientHeight) / 2;
+            }
+        });
+    }
+  }, [isLoading]); // Depend on loading state finishing
 
   const [memberModal, setMemberModal] = useState({
     isOpen: false,
@@ -482,6 +531,7 @@ export default function Home() {
 
   const handleAddBranch = async (parentId: string) => {
     try {
+      setIsLoading(true);
         await fetch('/api/nodes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -516,6 +566,7 @@ export default function Home() {
   const submitMember = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setIsLoading(true);
         await fetch('/api/nodes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -537,6 +588,7 @@ export default function Home() {
     if (nodeId === treeData?.id) return;
     
     try {
+        setIsLoading(true);
         await fetch(`/api/nodes/${nodeId}`, { method: 'DELETE' });
         fetchTree();
     } catch(err) {
@@ -546,6 +598,7 @@ export default function Home() {
 
   const handleEditBranch = async (nodeId: string, newTitle: string) => {
     try {
+      setIsLoading(true);
         await fetch(`/api/nodes/${nodeId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -559,9 +612,14 @@ export default function Home() {
 
   if (isLoading) {
       return (
-          <div className="h-screen w-full flex items-center justify-center bg-zinc-950 text-white">
-              Loading...
+        <main className="relative h-screen w-full overflow-hidden bg-zinc-950">
+          <div className="fixed inset-0 bg-[url('/background-pg.jpg')] bg-cover bg-center bg-no-repeat pointer-events-none" />
+          <div className="absolute inset-0 overflow-auto flex">
+            <div className="min-w-fit w-fit m-auto min-h-full px-40 py-20">
+              <SkeletonMindMap />
+            </div>
           </div>
+        </main>
       );
   }
 
@@ -569,8 +627,8 @@ export default function Home() {
     <main className="relative h-screen w-full overflow-hidden bg-zinc-950">
       <div className="fixed inset-0 bg-[url('/background-pg.jpg')] bg-cover bg-center bg-no-repeat pointer-events-none" />
 
-      <div ref={scrollRef} className="absolute inset-0 overflow-auto flex">
-        <div className="min-w-fit w-fit m-auto min-h-full px-40 py-20 relative flex flex-col items-center">
+      <div ref={scrollRef} className="absolute inset-0 overflow-auto flex cursor-grab active:cursor-grabbing">
+        <div className="min-w-fit w-fit m-auto min-h-full p-[2500px] relative flex flex-col items-center">
             
             {/* Scrollable Header - Centered Layout */}
             <div className="text-white text-center mb-24 relative z-10">

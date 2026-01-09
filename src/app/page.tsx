@@ -280,6 +280,7 @@ const MindMapNode = ({
                     )}
 
                     <div 
+                        onMouseDown={(e) => e.stopPropagation()}
                         onClick={() => hasMinChildren && onToggleNode(node.id, !isOpen)}
                         className={`p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl w-64 shrink-0 ${spaceMono.className} ${hasMinChildren ? 'cursor-pointer hover:bg-white/15 transition-colors' : ''}`}>
                         <div className="flex items-center gap-3 mb-2">
@@ -328,6 +329,7 @@ const MindMapNode = ({
                   />
             ) : (
                 <div 
+                    onMouseDown={(e) => e.stopPropagation()}
                     onClick={showArrow ? () => onToggleNode(node.id, !isOpen) : undefined}
                     className={`group/node relative flex items-center gap-3 px-8 py-3 bg-white/5 backdrop-blur-md border border-white/20 rounded-2xl transition-all duration-300 ${spaceMono.className} z-10 ${showArrow ? 'cursor-pointer hover:bg-white/10' : ''}`}
                 >
@@ -409,6 +411,7 @@ const MindMapNode = ({
                       <div className="absolute -top-8 left-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30"></div>
                       
                       <button 
+                        onMouseDown={(e) => e.stopPropagation()}
                         onClick={() => onAddMember(node.id)}
                         className={`px-4 py-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all whitespace-nowrap text-sm text-white ${spaceMono.className}`}
                       >
@@ -421,6 +424,7 @@ const MindMapNode = ({
                        <div className="absolute -top-8 right-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30"></div>
 
                       <button 
+                        onMouseDown={(e) => e.stopPropagation()}
                         onClick={() => onAddBranch(node.id)}
                         className={`px-4 py-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all whitespace-nowrap text-sm text-white ${spaceMono.className}`}
                       >
@@ -693,6 +697,10 @@ export default function Home() {
     isOpen: false,
     parentId: ''
   });
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    nodeId: ''
+  });
   const [newMember, setNewMember] = useState({ name: '', bio: '', role: '', imageUrl: '' });
 
   const handleAddBranch = async (parentId: string) => {
@@ -749,15 +757,22 @@ export default function Home() {
     }
   };
 
-  const handleDeleteNode = async (nodeId: string) => {
+  const handleDeleteNode = (nodeId: string) => {
     if (nodeId === treeData?.id) return;
-    
+    setDeleteModal({ isOpen: true, nodeId });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.nodeId) return;
+
     try {
         setIsLoading(true);
-        await fetch(`/api/nodes/${nodeId}`, { method: 'DELETE' });
+        await fetch(`/api/nodes/${deleteModal.nodeId}`, { method: 'DELETE' });
         fetchTree();
     } catch(err) {
         console.error("Failed to delete node", err);
+    } finally {
+        setDeleteModal({ isOpen: false, nodeId: '' });
     }
   };
 
@@ -1072,6 +1087,31 @@ export default function Home() {
                 Add Member
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-sm p-6 bg-black/80 border border-white/20 backdrop-blur-md rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-200">
+             <h3 className={`text-xl text-white mb-2 font-bold ${spaceMono.className}`}>Confirm Deletion</h3>
+             <p className="text-white/60 text-sm mb-6">
+                Are you sure you want to delete this node? This action cannot be undone and will remove all child nodes.
+             </p>
+             <div className="flex gap-3 justify-end">
+                <button 
+                    onClick={() => setDeleteModal({ isOpen: false, nodeId: '' })}
+                    className="px-4 py-2 text-sm text-white/70 hover:text-white transition-colors"
+                >
+                    Cancel
+                </button>
+                <button 
+                    onClick={confirmDelete}
+                    className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-200 text-sm rounded-lg transition-all"
+                >
+                    Delete
+                </button>
+             </div>
           </div>
         </div>
       )}

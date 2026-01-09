@@ -72,12 +72,12 @@ const TreeBranch = ({
     <div className="flex flex-col items-center relative px-4 shrink-0">
        {!isOnly && (
           <>
-            {!isFirst && <div className="absolute top-0 left-0 w-1/2 h-px bg-white/30"></div>}
-            {!isLast && <div className="absolute top-0 right-0 w-1/2 h-px bg-white/30"></div>}
+            {!isFirst && <div className="absolute top-0 left-0 w-1/2 h-px bg-white/30 pointer-events-none"></div>}
+            {!isLast && <div className="absolute top-0 right-0 w-1/2 h-px bg-white/30 pointer-events-none"></div>}
           </>
        )}
        
-       <div className="h-8 w-px bg-white/30"></div>
+       <div className="h-8 w-px bg-white/30 pointer-events-none"></div>
        
        {children}
     </div>
@@ -177,7 +177,7 @@ const MindMapNode = ({
 
   return (
     <div id={`node-${node.id}`} className="flex flex-col items-center relative group/node z-10">
-       <div className="relative flex items-center gap-2 z-10">
+       <div className="relative flex items-center gap-2 z-20">
             {!isBranch ? (
                isEditing ? (
                  <div className="relative animate-in fade-in zoom-in duration-300 z-50">
@@ -371,7 +371,7 @@ const MindMapNode = ({
             )}
        </div>
 
-      <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] grid-cols-[1fr] opacity-100' : 'grid-rows-[0fr] grid-cols-[0fr] opacity-0'}`}>
+      <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] grid-cols-[1fr] opacity-100' : 'grid-rows-[0fr] grid-cols-[0fr] opacity-0 pointer-events-none'}`}>
         <div className="min-h-0 min-w-0 flex flex-col items-center overflow-visible">
             <div className="h-8 w-px bg-white/30"></div>
             
@@ -406,9 +406,9 @@ const MindMapNode = ({
                >
                  <div className="flex gap-6">
                    <div className="flex flex-col items-center relative shrink-0">
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-px bg-white/30"></div>
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-px bg-white/30 pointer-events-none"></div>
                       
-                      <div className="absolute -top-8 left-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30"></div>
+                      <div className="absolute -top-8 left-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30 pointer-events-none"></div>
                       
                       <button 
                         onMouseDown={(e) => e.stopPropagation()}
@@ -420,8 +420,8 @@ const MindMapNode = ({
                    </div>
 
                    <div className="flex flex-col items-center relative shrink-0">
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-px bg-white/30"></div>
-                       <div className="absolute -top-8 right-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30"></div>
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-px bg-white/30 pointer-events-none"></div>
+                       <div className="absolute -top-8 right-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30 pointer-events-none"></div>
 
                       <button 
                         onMouseDown={(e) => e.stopPropagation()}

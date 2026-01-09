@@ -369,8 +369,8 @@ const MindMapNode = ({
             )}
        </div>
 
-      <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-        <div className="min-h-0 flex flex-col items-center overflow-visible">
+      <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] grid-cols-[1fr] opacity-100' : 'grid-rows-[0fr] grid-cols-[0fr] opacity-0'}`}>
+        <div className="min-h-0 min-w-0 flex flex-col items-center overflow-visible">
             <div className="h-8 w-px bg-white/30"></div>
             
              <div className="flex flex-nowrap items-start justify-center">

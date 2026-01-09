@@ -458,40 +458,6 @@ export default function Home() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [startY, setStartY] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [scrollTop, setScrollTop] = useState(0);
-
-  const onMouseDown = (e: React.MouseEvent) => {
-    if (!scrollRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - scrollRef.current.offsetLeft);
-    setStartY(e.pageY - scrollRef.current.offsetTop);
-    setScrollLeft(scrollRef.current.scrollLeft);
-    setScrollTop(scrollRef.current.scrollTop);
-  };
-
-  const onMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const onMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const y = e.pageY - scrollRef.current.offsetTop;
-    const walkX = (x - startX) * 1;
-    const walkY = (y - startY) * 1;
-    scrollRef.current.scrollLeft = scrollLeft - walkX;
-    scrollRef.current.scrollTop = scrollTop - walkY;
-  };
-
   const toggleNode = useCallback((id: string, isOpen: boolean) => {
     setExpandedNodes(prev => ({ ...prev, [id]: isOpen }));
   }, []);
@@ -821,11 +787,7 @@ export default function Home() {
 
       <div 
         ref={scrollRef} 
-        className="absolute inset-0 overflow-auto flex cursor-grab active:cursor-grabbing"
-        onMouseDown={onMouseDown}
-        onMouseLeave={onMouseLeave}
-        onMouseUp={onMouseUp}
-        onMouseMove={onMouseMove}
+        className="absolute inset-0 overflow-auto flex"
       >
         <div className="min-w-fit w-fit m-auto min-h-full p-625 relative flex flex-col items-center">
             

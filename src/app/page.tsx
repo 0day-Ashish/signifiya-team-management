@@ -111,7 +111,7 @@ const MindMapNode = ({
   const isBranch = node.type === 'branch';
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const defaultOpen = (node.children && node.children.length > 0 && !isBranch) || false;
+  const defaultOpen = false;
   const isOpen = expandedNodes[node.id] !== undefined ? expandedNodes[node.id] : defaultOpen;
 
   const hasMinChildren = (node.children && node.children.length > 0);
@@ -279,7 +279,9 @@ const MindMapNode = ({
                     </div>
                     )}
 
-                    <div className={`p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl w-64 shrink-0 ${spaceMono.className}`}>
+                    <div 
+                        onClick={() => hasMinChildren && onToggleNode(node.id, !isOpen)}
+                        className={`p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl w-64 shrink-0 ${spaceMono.className} ${hasMinChildren ? 'cursor-pointer hover:bg-white/15 transition-colors' : ''}`}>
                         <div className="flex items-center gap-3 mb-2">
                         {node.memberDetails?.imageUrl ? (
                             <div className="relative w-10 h-10 shrink-0">
@@ -299,6 +301,13 @@ const MindMapNode = ({
                             <h3 className="text-lg font-bold text-white truncate">{node.memberDetails?.name}</h3>
                             <p className="text-xs text-white/60 uppercase tracking-wider truncate">{node.memberDetails?.role}</p>
                         </div>
+                        {hasMinChildren && (
+                            <div className={`ml-auto transform transition-transform duration-300 text-white/50 ${isOpen ? 'rotate-180' : ''}`}>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                </svg>
+                            </div>
+                        )}
                         </div>
                         <p className="text-xs text-white/50 leading-relaxed border-t border-white/10 pt-2 mt-2 wrap-break-words">
                         {node.memberDetails?.bio}

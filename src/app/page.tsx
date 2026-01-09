@@ -20,14 +20,12 @@ interface Node {
   children?: Node[];
 }
 
-// Simple skeleton blocks used during loading
 const SkeletonBox = ({ width = 'w-64', height = 'h-20', rounded = 'rounded-2xl' }: { width?: string; height?: string; rounded?: string }) => (
   <div className={`animate-pulse ${width} ${height} bg-white/10 backdrop-blur-md border border-white/20 ${rounded}`}></div>
 );
 
 const SkeletonMindMap = () => (
   <div className="relative z-10 flex flex-col items-center">
-    {/* Header space mimic */}
     <div className="text-white text-center mb-24">
       <div className="flex items-baseline justify-center gap-2">
         <SkeletonBox width="w-48" height="h-12" />
@@ -38,11 +36,9 @@ const SkeletonMindMap = () => (
       </div>
     </div>
 
-    {/* Root node */}
     <div className="flex flex-col items-center">
       <SkeletonBox width="w-64" height="h-14" />
       <div className="h-8 w-px bg-white/20 my-4"></div>
-      {/* Children placeholder */}
       <div className="flex gap-8">
         <div className="flex flex-col items-center">
           <div className="h-8 w-px bg-white/20 mb-2"></div>
@@ -74,17 +70,13 @@ const TreeBranch = ({
 }) => {
   return (
     <div className="flex flex-col items-center relative px-4 shrink-0">
-       {/* Horizontal Connector at TOP */}
        {!isOnly && (
           <>
-            {/* Line to the Left (if not first) */}
             {!isFirst && <div className="absolute top-0 left-0 w-1/2 h-px bg-white/30"></div>}
-            {/* Line to the Right (if not last) */}
             {!isLast && <div className="absolute top-0 right-0 w-1/2 h-px bg-white/30"></div>}
           </>
        )}
        
-       {/* Vertical Connector DOWN from line to content */}
        <div className="h-8 w-px bg-white/30"></div>
        
        {children}
@@ -119,18 +111,10 @@ const MindMapNode = ({
   const isBranch = node.type === 'branch';
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Derived isOpen state from parent props
-  // Members with children default to open, branches default to closed
   const defaultOpen = (node.children && node.children.length > 0 && !isBranch) || false;
   const isOpen = expandedNodes[node.id] !== undefined ? expandedNodes[node.id] : defaultOpen;
 
-  // Logic to toggle arrow visibility
-  // If editing/admin is available, we show arrow even if empty because we might add children.
-  // Actually the requirement is "remove dropdown arrow function if the node is empty in view mode only"
-  // "View mode" = !isAdmin. Or simply "not currently editing".
-  // If !isAdmin and no children, hide arrow.
   const hasMinChildren = (node.children && node.children.length > 0);
-  // Admin always sees arrow if it's a branch because admin can add items (which are children)
   const showArrow = hasMinChildren || (isBranch && isAdmin);
 
   useEffect(() => {
@@ -144,7 +128,7 @@ const MindMapNode = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const childrenCount = (node.children?.length || 0) + (isBranch && isAdmin ? 1 : 0); // +1 for Action Node only if Branch and Admin
+  const childrenCount = (node.children?.length || 0) + (isBranch && isAdmin ? 1 : 0);
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState(node.title || '');
   const [editedMember, setEditedMember] = useState({
@@ -230,7 +214,6 @@ const MindMapNode = ({
                  </div>
                ) : (
                <div className="relative animate-in fade-in zoom-in duration-300 group/member">
-                    {/* Updated Menu Button for Member */}
                     {isAdmin && (
                     <div className="absolute -top-3 -right-3 z-30 flex gap-2">
                         <div className="relative" ref={dropdownRef}>
@@ -243,7 +226,6 @@ const MindMapNode = ({
                                 </svg>
                             </button>
 
-                            {/* Dropdown Menu */}
                             {showDropdown && (
                                 <div className="absolute top-full right-0 mt-2 w-48 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200 z-50">
                                     <button 
@@ -300,7 +282,7 @@ const MindMapNode = ({
                     <div className={`p-6 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl w-64 shrink-0 ${spaceMono.className}`}>
                         <div className="flex items-center gap-3 mb-2">
                         {node.memberDetails?.imageUrl ? (
-                            <div className="relative w-10 h-10 flex-shrink-0">
+                            <div className="relative w-10 h-10 shrink-0">
                                 <Image 
                                     src={node.memberDetails.imageUrl} 
                                     alt={node.memberDetails.name}
@@ -309,7 +291,7 @@ const MindMapNode = ({
                                 />
                             </div>
                         ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-linear-to-br from-white/20 to-white/5 flex items-center justify-center text-sm font-bold text-white shrink-0">
                                 {node.memberDetails?.name.charAt(0)}
                             </div>
                         )}
@@ -318,7 +300,7 @@ const MindMapNode = ({
                             <p className="text-xs text-white/60 uppercase tracking-wider truncate">{node.memberDetails?.role}</p>
                         </div>
                         </div>
-                        <p className="text-xs text-white/50 leading-relaxed border-t border-white/10 pt-2 mt-2 break-words">
+                        <p className="text-xs text-white/50 leading-relaxed border-t border-white/10 pt-2 mt-2 wrap-break-words">
                         {node.memberDetails?.bio}
                         </p>
                     </div>
@@ -333,7 +315,7 @@ const MindMapNode = ({
                     onChange={(e) => setEditedTitle(e.target.value)}
                     onBlur={handleSaveTitle}
                     onKeyDown={handleKeyDown}
-                    className={`px-8 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-xl text-white outline-none focus:ring-2 focus:ring-white/30 min-w-[200px] text-center ${spaceMono.className}`}
+                    className={`px-8 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl text-xl text-white outline-none focus:ring-2 focus:ring-white/30 min-w-50 text-center ${spaceMono.className}`}
                   />
             ) : (
                 <div 
@@ -342,7 +324,6 @@ const MindMapNode = ({
                 >
                     <span className="text-xl tracking-wide text-white">{node.title}</span>
                     
-                    {/* Icons inside the box - Visible on hover only for Admins */}
                     {isAdmin && (
                     <div className="flex gap-1 opacity-0 group-hover/node:opacity-100 transition-opacity duration-200">
                         <button 
@@ -381,10 +362,8 @@ const MindMapNode = ({
 
       <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
         <div className="min-h-0 flex flex-col items-center overflow-visible">
-            {/* Connector from Parent Node down to the horizontal bus */}
             <div className="h-8 w-px bg-white/30"></div>
             
-            {/* Children Container - remove gap since TreeBranch handles spacing via padding */}
              <div className="flex flex-nowrap items-start justify-center">
                {node.children?.map((child, index) => (
                   <TreeBranch 
@@ -409,17 +388,15 @@ const MindMapNode = ({
                ))}
 
                { isBranch && isAdmin && (
-               /* Action Buttons Node - Only for Branch type */
                <TreeBranch 
                  isFirst={childrenCount === 1}
                  isLast={true}
                  isOnly={childrenCount === 1}
                >
                  <div className="flex gap-6">
-                   {/* Option 1: Add Member */}
                    <div className="flex flex-col items-center relative shrink-0">
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-px bg-white/30"></div>
-                       {/* Horizontal bracket for actions */}
+                      
                       <div className="absolute -top-8 left-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30"></div>
                       
                       <button 
@@ -430,10 +407,8 @@ const MindMapNode = ({
                       </button>
                    </div>
 
-                   {/* Option 2: Create Branch */}
                    <div className="flex flex-col items-center relative shrink-0">
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-px bg-white/30"></div>
-                       {/* Horizontal bracket for actions */}
                        <div className="absolute -top-8 right-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30"></div>
 
                       <button 
@@ -457,23 +432,19 @@ const MindMapNode = ({
 export default function Home() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAdminLogin, setIsAdminLogin] = useState(false); // UI toggle for login modal
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
   
-  // Auth state
   const [isAdmin, setIsAdmin] = useState(false);
   
-  // Loading state for initial fetch
   const [isLoading, setIsLoading] = useState(true);
   
   const [treeData, setTreeData] = useState<Node | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
   
-  // Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Drag Scroll State
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [startY, setStartY] = useState(0);
@@ -481,8 +452,6 @@ export default function Home() {
   const [scrollTop, setScrollTop] = useState(0);
 
   const onMouseDown = (e: React.MouseEvent) => {
-    // Only drag if clicking on the background (not buttons/inputs)
-    // We can check if the target is one of the container divs or svg background
     if (!scrollRef.current) return;
     setIsDragging(true);
     setStartX(e.pageX - scrollRef.current.offsetLeft);
@@ -504,7 +473,7 @@ export default function Home() {
     e.preventDefault();
     const x = e.pageX - scrollRef.current.offsetLeft;
     const y = e.pageY - scrollRef.current.offsetTop;
-    const walkX = (x - startX) * 1; // Scroll speed
+    const walkX = (x - startX) * 1;
     const walkY = (y - startY) * 1;
     scrollRef.current.scrollLeft = scrollLeft - walkX;
     scrollRef.current.scrollTop = scrollTop - walkY;
@@ -514,9 +483,7 @@ export default function Home() {
     setExpandedNodes(prev => ({ ...prev, [id]: isOpen }));
   }, []);
 
-  // Search Logic
   const handleSearchSelect = (nodeId: string) => {
-      // 1. Find path to node to expand parents
       const findPath = (current: Node, targetId: string, path: string[] = []): string[] | null => {
           if (current.id === targetId) return path;
           if (current.children) {
@@ -531,31 +498,26 @@ export default function Home() {
       if (!treeData) return;
       const path = findPath(treeData, nodeId);
       
-      // 2. Expand all parents
       if (path) {
           const newExpanded = { ...expandedNodes };
           path.forEach(id => newExpanded[id] = true);
           setExpandedNodes(newExpanded);
       }
 
-      // 3. Close search and scroll
       setIsSearchOpen(false);
       setSearchQuery('');
       
-      // Allow render to update expanded state before scrolling
       setTimeout(() => {
           const element = document.getElementById(`node-${nodeId}`);
           if (element) {
                element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-               // Highlight effect
                const card = element.querySelector('.group\\/node > div'); 
-               // Note: We target the inner card div usually found inside the node wrapper
                if (card) {
                    card.classList.add('ring-4', 'ring-white/50');
                    setTimeout(() => card.classList.remove('ring-4', 'ring-white/50'), 2000);
                }
           }
-      }, 300); // 300ms delay to ensure expansion animation starts/completes enough
+      }, 300);
   };
 
   const getSearchResults = () => {
@@ -583,7 +545,6 @@ export default function Home() {
       }
   }, [isSearchOpen]);
 
-  // Check auth status on mount
   useEffect(() => {
     fetch('/api/auth/check')
         .then(res => res.json())
@@ -638,13 +599,9 @@ export default function Home() {
         
         if (!Array.isArray(rawData)) {
              console.error("API returned non-array data:", rawData);
-             // If we get an object (like error), treat it as empty or handle it.
-             // For now, let's assuming empty if invalid to trigger root creation maybe?
-             // Or better, just throw.
              throw new Error("Invalid data format received from API");
         }
         
-        // Map raw DB flat structure to UI nested structure
         const nodes: Node[] = rawData.map((item: any) => ({
             id: item.id,
             type: item.type as 'branch' | 'member',
@@ -659,19 +616,15 @@ export default function Home() {
             } : undefined
         }));
         
-        // Convert flat list to tree
         const buildTree = (mappedNodes: Node[]) => {
             const nodeMap = new Map<string, Node>();
             let rootNode: Node | null = null;
             
-            // First pass: create nodes and map
             mappedNodes.forEach(node => {
                 nodeMap.set(node.id, { ...node, children: [] });
             });
             
-            // Second pass: link children
             mappedNodes.forEach(node => {
-               // We need to use the object from the map to ensure references are shared
                const currentNode = nodeMap.get(node.id)!;
                
                if (!node.parentId) {
@@ -691,14 +644,12 @@ export default function Home() {
         if (tree) {
             setTreeData(tree);
         } else {
-             // Initialize default root if DB is empty
              const rootRes = await fetch('/api/nodes', {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
                  body: JSON.stringify({ type: 'branch', title: 'Leads' })
              });
              const rootData = await rootRes.json();
-             // Map the single root response too
              setTreeData({
                 id: rootData.id,
                 type: rootData.type,
@@ -717,7 +668,6 @@ export default function Home() {
     fetchTree();
   }, [fetchTree]);
 
-  // Scroll to center when data loads
   useEffect(() => {
     if (!isLoading && treeData && scrollRef.current) {
         requestAnimationFrame(() => {
@@ -728,7 +678,7 @@ export default function Home() {
             }
         });
     }
-  }, [isLoading]); // Depend on loading state finishing
+  }, [isLoading]);
 
   const [memberModal, setMemberModal] = useState({
     isOpen: false,
@@ -791,7 +741,6 @@ export default function Home() {
   };
 
   const handleDeleteNode = async (nodeId: string) => {
-    // If root, don't delete (though UI prevents it too)
     if (nodeId === treeData?.id) return;
     
     try {
@@ -854,9 +803,8 @@ export default function Home() {
         onMouseUp={onMouseUp}
         onMouseMove={onMouseMove}
       >
-        <div className="min-w-fit w-fit m-auto min-h-full p-[2500px] relative flex flex-col items-center">
+        <div className="min-w-fit w-fit m-auto min-h-full p-625 relative flex flex-col items-center">
             
-            {/* Scrollable Header - Centered Layout */}
             <div className="text-white text-center mb-24 relative z-10">
                     <div className="flex items-baseline justify-center gap-2">
                         <h1 className={`text-6xl font-bold ${bvhBartle.className}`}>
@@ -887,7 +835,6 @@ export default function Home() {
         </div>
       </div>
       
-      {/* Search Trigger Button */}
       <button 
         onClick={() => setIsSearchOpen(true)}
         className="absolute top-0 left-0 m-8 p-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-white transition-all z-20 group"
@@ -898,7 +845,6 @@ export default function Home() {
         </svg>
       </button>
 
-      {/* Search Modal */}
       {isSearchOpen && (
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-32 bg-black/40 backdrop-blur-sm p-4" onClick={() => setIsSearchOpen(false)}>
           <div className="relative w-full max-w-xl bg-black/80 border border-white/20 backdrop-blur-md rounded-2xl shadow-2xl animate-in fade-in slide-in-from-top-4 duration-200 overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -966,7 +912,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Login Button - Only show if NOT logged in */}
       {!isAdmin && (
       <button 
         onClick={() => setIsAdminLogin(true)}
@@ -979,7 +924,6 @@ export default function Home() {
       </button>
       )}
 
-      {/* Logout Button - Only show if IS logged in */}
       {isAdmin && (
       <button 
         onClick={handleLogout}
@@ -993,7 +937,6 @@ export default function Home() {
       </button>
       )}
 
-      {/* Admin Login Modal */}
       {isAdminLogin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-md p-8 bg-black/30 border border-white/20 backdrop-blur-md rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -1044,7 +987,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Add Member Modal */}
       {memberModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="relative w-full max-w-md p-8 bg-black/80 border border-white/20 backdrop-blur-md rounded-2xl shadow-2xl animate-in fade-in zoom-in duration-200">

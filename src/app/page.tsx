@@ -441,7 +441,6 @@ const MindMapNode = ({
   );
 };
 
-
 export default function Home() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -647,17 +646,20 @@ export default function Home() {
     fetchTree();
   }, [fetchTree]);
 
+  // Only center the tree on initial load
+  const hasCenteredOnce = useRef(false);
   useEffect(() => {
-    if (!isLoading && treeData && scrollRef.current) {
-        requestAnimationFrame(() => {
-            if (scrollRef.current) {
-                const { scrollWidth, clientWidth, scrollHeight, clientHeight } = scrollRef.current;
-                scrollRef.current.scrollLeft = (scrollWidth - clientWidth) / 2;
-                scrollRef.current.scrollTop = (scrollHeight - clientHeight) / 2;
-            }
-        });
+    if (!isLoading && treeData && scrollRef.current && !hasCenteredOnce.current) {
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          const { scrollWidth, clientWidth, scrollHeight, clientHeight } = scrollRef.current;
+          scrollRef.current.scrollLeft = (scrollWidth - clientWidth) / 2;
+          scrollRef.current.scrollTop = (scrollHeight - clientHeight) / 2;
+          hasCenteredOnce.current = true;
+        }
+      });
     }
-  }, [isLoading]);
+  }, [isLoading, treeData]);
 
   const [memberModal, setMemberModal] = useState({
     isOpen: false,

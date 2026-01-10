@@ -374,10 +374,9 @@ const MindMapNode = ({
       <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] grid-cols-[1fr] opacity-100' : 'grid-rows-[0fr] grid-cols-[0fr] opacity-0 pointer-events-none'}`}>
         <div className="min-h-0 min-w-0 flex flex-col items-center overflow-visible">
             <div className="h-8 w-px bg-white/30"></div>
-            {/* Horizontal scroll wrapper for large trees */}
-            <div className="w-full overflow-x-auto">
-              <div className="flex flex-nowrap min-w-max items-start justify-center">
-                {node.children?.map((child, index) => (
+            
+             <div className="flex flex-nowrap items-start justify-center">
+               {node.children?.map((child, index) => (
                   <TreeBranch 
                     key={child.id}
                     isFirst={index === 0}
@@ -397,42 +396,45 @@ const MindMapNode = ({
                       isAdmin={isAdmin}
                     />
                   </TreeBranch>
-                ))}
+               ))}
 
-                { isBranch && isAdmin && (
-                  <TreeBranch 
-                    isFirst={childrenCount === 1}
-                    isLast={true}
-                    isOnly={childrenCount === 1}
-                  >
-                    <div className="flex gap-6">
-                      <div className="flex flex-col items-center relative shrink-0">
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-px bg-white/30 pointer-events-none"></div>
-                        <div className="absolute -top-8 left-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30 pointer-events-none"></div>
-                        <button 
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onClick={() => onAddMember(node.id)}
-                          className={`px-4 py-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all whitespace-nowrap text-sm text-white ${spaceMono.className}`}
-                        >
-                          + Member
-                        </button>
-                      </div>
-                      <div className="flex flex-col items-center relative shrink-0">
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-px bg-white/30 pointer-events-none"></div>
-                        <div className="absolute -top-8 right-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30 pointer-events-none"></div>
-                        <button 
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onClick={() => onAddBranch(node.id)}
-                          className={`px-4 py-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all whitespace-nowrap text-sm text-white ${spaceMono.className}`}
-                        >
-                          + Branch
-                        </button>
-                      </div>
-                    </div>
-                  </TreeBranch>
-                )}
-              </div>
-            </div>
+               { isBranch && isAdmin && (
+               <TreeBranch 
+                 isFirst={childrenCount === 1}
+                 isLast={true}
+                 isOnly={childrenCount === 1}
+               >
+                 <div className="flex gap-6">
+                   <div className="flex flex-col items-center relative shrink-0">
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-px bg-white/30 pointer-events-none"></div>
+                      
+                      <div className="absolute -top-8 left-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30 pointer-events-none"></div>
+                      
+                      <button 
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={() => onAddMember(node.id)}
+                        className={`px-4 py-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all whitespace-nowrap text-sm text-white ${spaceMono.className}`}
+                      >
+                        + Member
+                      </button>
+                   </div>
+
+                   <div className="flex flex-col items-center relative shrink-0">
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-px bg-white/30 pointer-events-none"></div>
+                       <div className="absolute -top-8 right-1/2 w-[calc(50%+0.75rem)] h-px bg-white/30 pointer-events-none"></div>
+
+                      <button 
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={() => onAddBranch(node.id)}
+                        className={`px-4 py-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/20 rounded-xl transition-all whitespace-nowrap text-sm text-white ${spaceMono.className}`}
+                      >
+                        + Branch
+                      </button>
+                   </div>
+                 </div>
+               </TreeBranch>
+               )}
+             </div>
         </div>
       </div>
     </div>
